@@ -1,6 +1,9 @@
 import { openai } from '@/utils/declarations';
 import { NextRequest, NextResponse } from 'next/server';
 
+export const maxDuration = 30;
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   console.log('Processing PDF file begins...');
 

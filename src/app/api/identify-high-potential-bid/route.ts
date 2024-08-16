@@ -1,9 +1,10 @@
 // File: src/app/api/identify-high-potential-bid/route.ts
 
-import { openai } from '@/utils/declarations';
+import { openai, predefinedKeywords } from '@/utils/declarations';
 import { NextRequest, NextResponse } from 'next/server';
 
-const predefinedKeywords = ['Cylinder', 'Sensor', 'Hammer', 'Valve'];
+export const maxDuration = 30;
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
