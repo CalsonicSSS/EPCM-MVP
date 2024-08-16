@@ -1,18 +1,53 @@
 'use client';
 
 import { FileDetails } from '@/types/statesAndConstants';
-import React, { ChangeEvent, DragEvent, ReactNode, useRef, useState } from 'react';
+import React, { ChangeEvent, Dispatch, DragEvent, ReactNode, SetStateAction, useRef, useState } from 'react';
 import { Worker, Viewer } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
-import { FileIcon } from '@radix-ui/react-icons';
+import { FileIcon, GearIcon } from '@radix-ui/react-icons';
+import { ExtractedPdfData } from '@/types/responses';
 
-export default function PdfUploader(): ReactNode {
+export default function PdfUploader({ setExtractedPdfData }: { setExtractedPdfData: Dispatch<SetStateAction<ExtractedPdfData | null>> }): ReactNode {
   const [uploadedPdf, setUploadedPdf] = useState<File | null>(null);
   const [readedPdf, setReadedPdf] = useState<string | null>(null);
   const [fileDetails, setFileDetails] = useState<FileDetails | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+
+  const handleProcessPdf = async () => {
+    console.log('handleProcessPdf runs');
+
+    if (!uploadedPdf) {
+      alert('Please upload a PDF file first.');
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      console.log('sending request to /api/process-pdf');
+      const formData = new FormData();
+      formData.append('file', uploadedPdf);
+
+      const response = await fetch('/api/process-pdf', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to process PDF');
+      }
+
+      const data = await response.json();
+      setExtractedPdfData(data);
+    } catch (error) {
+      alert('An error occurred while processing the PDF. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -78,6 +113,7 @@ export default function PdfUploader(): ReactNode {
 
   return (
     <div className='w-full h-full flex flex-col'>
+      {/* ----------------------------------------------------------------------------------------------- */}
       {/* handle pdf file upload */}
       <div className='border-2 border-line border-gray-300 rounded-xl px-5 py-3 mb-5'>
         {uploadedPdf && fileDetails && readedPdf ? (
@@ -101,14 +137,31 @@ export default function PdfUploader(): ReactNode {
                 <input type='file' accept='.pdf' onChange={handleFileChange} ref={fileInputRef} className='hidden' />
                 Upload Another PDF
               </button>
+
               <button
-                onClick={() => {}}
+                onClick={handleProcessPdf}
+                disabled={isProcessing}
                 type='button'
-                className='inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+                className='inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-300'
               >
-                <FileIcon className='-ml-1 mr-2 h-5 w-5' aria-hidden='true' />
-                {/* this input tag has default styling (choose file + button), we use className='hidden' to hide this tag entirely and use ref to link this input with button through click action*/}
-                Process Current PDF
+                {isProcessing ? (
+                  <>
+                    <svg className='animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
+                      <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4'></circle>
+                      <path
+                        className='opacity-75'
+                        fill='currentColor'
+                        d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+                      ></path>
+                    </svg>
+                    Processing...
+                  </>
+                ) : (
+                  <div className='flex'>
+                    <GearIcon className='-ml-1 mr-2 h-5 w-5' aria-hidden='true' />
+                    {'Process Current PDF'}
+                  </div>
+                )}
               </button>
             </div>
           </div>

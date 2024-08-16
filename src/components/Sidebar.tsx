@@ -18,7 +18,7 @@ export function Sidebar() {
   return (
     <div className='w-64 bg-gray-800 text-white h-full flex flex-col p-5'>
       <div className='flex justify-left items-center mb-10'>
-        <Image src='/epcm_logo.png' alt='EPCM Logo' width={65} height={50} quality={100} />
+        <Image src='/epcm_logo.png' alt='EPCM Logo' width={60} height={60} quality={100} />
         <span className='p-4 text-3xl font-bold flex justify-center'>EPCM</span>
       </div>
       <nav className='flex-1'>
